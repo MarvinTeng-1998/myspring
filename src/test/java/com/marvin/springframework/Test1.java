@@ -1,6 +1,10 @@
 package com.marvin.springframework;
 
 import com.marvin.bean.UserService;
+import com.marvin.springframework.beans.factory.BeanFactory;
+import com.marvin.springframework.beans.factory.config.BeanDefinition;
+import com.marvin.springframework.beans.factory.support.DefaultListableBeanFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
 /**
@@ -12,13 +16,19 @@ import org.junit.Test;
  * @author: dengbin
  * @create: 2023-06-27 22:21
  **/
+@Slf4j
 public class Test1 {
     @Test
     public void test1() {
-        BeanFactory beanFactory = new BeanFactory();
-        BeanDefinition beanDefinition = new BeanDefinition(new UserService());
-        beanFactory.registerBeanDefinition("userService", beanDefinition);
-        UserService userService = (UserService) beanFactory.getBean("userService");
-        userService.queryInfo();
+        DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+        BeanDefinition beanDefinition = new BeanDefinition(UserService.class);
+        beanFactory.registerBeanDefinition("userService",beanDefinition);
+        UserService userService1 = (UserService) beanFactory.getBean("userService");
+        userService1.queryInfo();
+
+        UserService userService2 = (UserService) beanFactory.getBean("userService");
+        userService2.queryInfo();
+
+        System.out.println("两个对象是否相等：" + (userService1 == userService2) );
     }
 }
