@@ -137,3 +137,36 @@ public interface InvocationHandler {
 #### 3.2.3 Cglib动态代理
 
 #### 3.2.4 AspectJ动态代理
+
+
+## 4.注入属性和依赖对象
+目前可以基于构造器去创建Bean，但是很多属性是有依赖关系的。不能全部用构造器来创建。可以使用DI的方式，也就是Spring大名鼎鼎的Dependency Injection。
+
+这也就是说我们在实例化Bean之后，为这个Bean去添加属性。
+### 4.1 设计思路
+既然我们是在实例化Bean之后去给Bean添加属性，那也就是说我们需要在BeanDefinition中添加Bean的属性信息。
+也就是需要有一个参数PropertyValues。另外，我们还需要在createBean后去修改这个Bean，也就是说我们要ApplyValues到Properties上。
+
+对于Bean对象的属性而言分为两种：基本数据类型、引用数据类型。对于这两种数据类型，我们需要分别去处理。
+
+首先都需要用属性名和属性值来封装到PropertyValue中，这个HashMap的Key是String代表属性名，Value是Object（可能是基本数据类型对象，引用数据类型对象都是BeanReference）。
+
+BeanReference中主要是存储了这个引用数据类型对象的名字，然后再去容器中拿到这个引用数据类型Bean，再封装到PropertyValue，再加入到PropertyValues容器中。**注意！这里需要先去注入这个引用数据对象，否则可能会出现无法注入成功的情况！**
+
+注册完属性中的引用数据类型和将需要注入的属性之后，我们在createBean之后要ApplyPropertyValues这个方法，也就是从BeanDefinition中拿到PropertyValues这个集合，然后便利集合中的对象属性，再使用反射将这个对象属性注入到Bean对象中！。
+
+### 4.2 思考
+**Q3:注解Autowire和注解Resource的区别是什么？**
+@Autowire为Spring提供的注解，只能按照byType进行注入，也就是说按照类型来装配对象。从Bean容器中找到这个类型的对象从而注入到这个属性上。
+默认情况下我们要求这个对象必须存在，如果这个对象在Bean容器中不存在的话，那就会报错。但是我们可以把这个注解Autowire中的required属性改成false，这样就不一定要存在了。
+**另外，如果我们想用byName的方式来查找这个Bean的话，我们可以使用@Qualifier("userDao")注解来先去找userDao的对象。**
+
+@Resource注解默认情况下按照ByName来注入。其中有两个字段，一个是name，一个是type，如果想按照type就制定type的值，如果想按照自定义name的值就设置name的值，如果想都使用则都设置。
+
+**Resource装配流程：**
+- 如果指定了name和type则在容器中找到唯一一个Bean来匹配。找不到抛出异常
+- 如果指定了name则找到唯一名字的bean进行装配，找不到抛出异常
+- 如果指定了type则找到符合这个type的bean进行装配，找不到或者找到多个抛出异常
+- 都没有指定的话，则自动按照byName的方式进行装配；如果没有匹配到的话，则回退为一个原始类型来进行匹配，如果匹配则自动装配。
+
+**！！！！我们可以使用@Value的方式来给基本数据类型和String数据类型注入值。**

@@ -1,7 +1,11 @@
 package com.marvin.springframework.beans.factory.support;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.marvin.springframework.beans.BeansException;
+import com.marvin.springframework.beans.PropertyValue;
+import com.marvin.springframework.beans.PropertyValues;
 import com.marvin.springframework.beans.factory.config.BeanDefinition;
+import com.marvin.springframework.beans.factory.config.BeanReference;
 
 import java.lang.reflect.Constructor;
 
@@ -27,11 +31,39 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         Object bean = null;
         try {
            bean = beanDefinition.getBeanClass().newInstance();
+           applyPropertyValues(beanName,bean,beanDefinition);
         } catch (InstantiationException | IllegalAccessException e) {
             throw new BeansException("Instantiation of bean failed",e);
         }
         addSingleton(beanName,bean);
         return bean;
+    }
+
+    /*
+     * @Description: TODO 给创建好的Bean注入PropertyValue
+     * @Author: dengbin
+     * @Date: 28/6/23 17:17
+     * @param beanName:
+     * @param bean:
+     * @param beanDefinition:
+     * @return: void
+     **/
+    protected void applyPropertyValues(String beanName, Object bean, BeanDefinition beanDefinition){
+        try {
+            PropertyValues propertyValues = beanDefinition.getPropertyValues();
+            for(PropertyValue propertyValue : propertyValues.getPropertyValues()){
+                String name = propertyValue.getName();
+                Object value = propertyValue.getValue();
+
+                // 这里表示如果这个属性是BeanReference 也就是是一个引用数据类型的话，我们需要去从Spring容器中找到这个引用数据类型。然后注入进去。
+                if(value instanceof BeanReference){
+                    value = getBean(((BeanReference) value).getBeanName());
+                }
+                BeanUtil.setFieldValue(bean,name,value);
+            }
+        } catch (BeansException e) {
+            throw new BeansException("Error setting property values: " + beanName);
+        }
     }
 
     /*

@@ -1,8 +1,12 @@
 package com.marvin.springframework;
 
+import com.marvin.bean.UserDao;
 import com.marvin.bean.UserService;
+import com.marvin.springframework.beans.PropertyValue;
+import com.marvin.springframework.beans.PropertyValues;
 import com.marvin.springframework.beans.factory.BeanFactory;
 import com.marvin.springframework.beans.factory.config.BeanDefinition;
+import com.marvin.springframework.beans.factory.config.BeanReference;
 import com.marvin.springframework.beans.factory.support.DefaultListableBeanFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -21,16 +25,16 @@ public class Test1 {
     @Test
     public void test1() {
         DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
-        BeanDefinition beanDefinition = new BeanDefinition(UserService.class);
+        beanFactory.registerBeanDefinition("userDao", new BeanDefinition(UserDao.class));
+        PropertyValues propertyValues = new PropertyValues();
+
+        propertyValues.addPropertyValue(new PropertyValue("uId","1001"));
+        propertyValues.addPropertyValue(new PropertyValue("userDao",new BeanReference("userDao")));
+        BeanDefinition beanDefinition = new BeanDefinition(UserService.class,propertyValues);
         beanFactory.registerBeanDefinition("userService",beanDefinition);
-        UserService userService1 = (UserService) beanFactory.getBean("userService","zhangsan");
-        userService1.queryInfo();
-        System.out.println(userService1);
 
-        UserService userService2 = (UserService) beanFactory.getBean("userService");
-        userService2.queryInfo();
-        System.out.println(userService2);
+        UserService userService = (UserService) beanFactory.getBean("userService");
+        userService.queryInfo();
 
-        System.out.println("两个对象是否相等：" + (userService1 == userService2) );
     }
 }

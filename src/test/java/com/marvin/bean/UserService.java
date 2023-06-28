@@ -7,16 +7,18 @@ package com.marvin.bean;
  **/
 public class UserService {
     private String username;
+    private UserDao userDao;
+    private String uId;
 
-    // public UserService() {
-    // }
+    public UserService() {
+    }
 
     public UserService(String username) {
         this.username = username;
     }
 
     public void queryInfo() {
-        System.out.println("查询用户信息" + username);
+        System.out.println("查询用户信息" + userDao.queryUsername(uId));
     }
 
     @Override
