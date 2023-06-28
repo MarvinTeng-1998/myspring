@@ -15,4 +15,14 @@ public interface BeanFactory {
      * @return: java.lang.Object
      **/
     Object getBean(String beanName);
+
+    /*
+     * @Description: TODO 根据Bean的名字及对象实例化参数来构造Bean对象。
+     * @Author: dengbin
+     * @Date: 28/6/23 15:17
+     * @param beanName:
+     * @param args: 对象实例化参数
+     * @return: java.lang.Object
+     **/
+    Object getBean(String beanName,Object... args);
 }

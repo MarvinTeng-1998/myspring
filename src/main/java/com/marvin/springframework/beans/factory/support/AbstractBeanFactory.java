@@ -35,6 +35,24 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
     }
 
     /*
+     * @Description: TODO 对具有参数的Bean进行构造
+     * @Author: dengbin
+     * @Date: 28/6/23 15:18
+     * @param beanName:
+     * @param args:
+     * @return: java.lang.Object
+     **/
+    @Override
+    public Object getBean(String beanName, Object... args) {
+        Object singleton = getSingleton(beanName);
+        if(singleton != null){
+            return singleton;
+        }
+        BeanDefinition beanDefinition = getBeanDefinition(beanName);
+        return createBean(beanName,beanDefinition,args);
+    }
+
+    /*
      * @Description: TODO 主要是获取BeanDefinition，也就是说我们把BeanDefinition的容器放到抽象工厂的子类下去了，使用了模版模式。
      * @Author: dengbin
      * @Date: 27/6/23 23:05
@@ -52,5 +70,17 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
      * @return: java.lang.Object
      **/
     protected abstract Object createBean(String beanName, BeanDefinition beanDefinition);
+
+
+    /*
+     * @Description: TODO 使用Bean的带参构造器去实例化一个Bean对象 的抽象方法。具体由AbstractAutowireBeanFactory实现。
+     * @Author: dengbin
+     * @Date: 28/6/23 15:22
+     * @param beanName:
+     * @param beanDefinition:
+     * @param args:
+     * @return: java.lang.Object
+     **/
+    protected abstract Object createBean(String beanName, BeanDefinition beanDefinition,Object[] args);
 
 }

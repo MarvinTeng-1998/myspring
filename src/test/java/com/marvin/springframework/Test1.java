@@ -23,11 +23,13 @@ public class Test1 {
         DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
         BeanDefinition beanDefinition = new BeanDefinition(UserService.class);
         beanFactory.registerBeanDefinition("userService",beanDefinition);
-        UserService userService1 = (UserService) beanFactory.getBean("userService");
+        UserService userService1 = (UserService) beanFactory.getBean("userService","zhangsan");
         userService1.queryInfo();
+        System.out.println(userService1);
 
         UserService userService2 = (UserService) beanFactory.getBean("userService");
         userService2.queryInfo();
+        System.out.println(userService2);
 
         System.out.println("两个对象是否相等：" + (userService1 == userService2) );
     }

@@ -6,7 +6,23 @@ package com.marvin.bean;
  * @create: 2023-06-27 22:21
  **/
 public class UserService {
-    public void queryInfo(){
-        System.out.println("查询用户信息");
+    private String username;
+
+    // public UserService() {
+    // }
+
+    public UserService(String username) {
+        this.username = username;
+    }
+
+    public void queryInfo() {
+        System.out.println("查询用户信息" + username);
+    }
+
+    @Override
+    public String toString() {
+        return "UserService{" +
+                "username='" + username + '\'' +
+                '}';
     }
 }
