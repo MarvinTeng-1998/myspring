@@ -170,3 +170,27 @@ BeanReference中主要是存储了这个引用数据类型对象的名字，然�
 - 都没有指定的话，则自动按照byName的方式进行装配；如果没有匹配到的话，则回退为一个原始类型来进行匹配，如果匹配则自动装配。
 
 **！！！！我们可以使用@Value的方式来给基本数据类型和String数据类型注入值。**
+
+## 5.资源加载器解析文件注册对象
+手动创建Bean的方式改到使用XML的方式来进行，通过配置文件来处理。因此需要一个资源文件解析器，需要做到能读取classpath、本地文件和云文件的配置内容。
+
+这个XML文件包括的是Bean对象的描述、属性信息。
+
+读取到配置文件后就应该注册Bean。
+### 5.1 实现思路
+首先我们需要一个Resource来对所有的资源文件读取，这里用到简单工厂模式用一个ResourceLoader来获取对应的Resource。这里我们主要设计三种Resource的获取：
+- ClassPathResource
+- UrlPathResource
+- FilePathResource
+每个都能拿到一个InputStream，这个InputStream用来读取文件数据。
+
+ResourceLoader能跟据文件前缀来读取并确认是什么样的文件类型。首先定义一个文件前缀："classpath:"，这个代表ClassPathResource。如果传入的文件是包含这个前缀的，则就是ClassPathResource，从而可以获取到InputStream。
+这个确定后，去设计一个关于XML的InputStream解析器。在这个解析器需要继承BeanDefinitionRegistry,这个BeanDefinitionRegistry去把读取到的bean信息注册到BeanDefinition容器中。
+> **重要问题：在我们读取到有一个ref的节点的时候，我们需要new一个BeanReference来记录它的beanName，最后去bean容器中拿到这个Bean。**
+> **因此我们需要把所有的属性信息存储在BeanDefinition的propertyValues中。这个PropertyValues后续在对象注入的时候，来逐个读取，并反射注入到这个对象中。**
+> **这里的Reader主要也是接口来实现的，这个Reader主要做的事情就是读取文件然后注入到对象中**
+
+截止到目前我们实现的Bean的初始化流程如下图：
+
+![流程1.png](img%2F%E6%B5%81%E7%A8%8B1.png)
+

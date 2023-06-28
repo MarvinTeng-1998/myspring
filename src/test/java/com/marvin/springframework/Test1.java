@@ -1,5 +1,6 @@
 package com.marvin.springframework;
 
+import cn.hutool.core.io.IoUtil;
 import com.marvin.bean.UserDao;
 import com.marvin.bean.UserService;
 import com.marvin.springframework.beans.PropertyValue;
@@ -8,8 +9,15 @@ import com.marvin.springframework.beans.factory.BeanFactory;
 import com.marvin.springframework.beans.factory.config.BeanDefinition;
 import com.marvin.springframework.beans.factory.config.BeanReference;
 import com.marvin.springframework.beans.factory.support.DefaultListableBeanFactory;
+import com.marvin.springframework.beans.factory.xml.XmlBeanDefinitionReader;
+import com.marvin.springframework.core.io.DefaultResourceLoader;
+import com.marvin.springframework.core.io.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * @TODO: 对BeanFactory做一个简单测试, 通过注册一个beanDefinition来对Bean的注入。
@@ -22,19 +30,28 @@ import org.junit.Test;
  **/
 @Slf4j
 public class Test1 {
+    private DefaultResourceLoader resourceLoader;
+
+    @Before
+    public void init(){
+        resourceLoader = new DefaultResourceLoader();
+    }
+
     @Test
-    public void test1() {
+    public void test1() throws IOException {
+        Resource resource = resourceLoader.getResource("classpath:important.properties");
+        InputStream is = resource.getInputStream();
+        String content = IoUtil.readUtf8(is);
+        System.out.println(content);
+    }
+
+    @Test
+    public void test2(){
         DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
-        beanFactory.registerBeanDefinition("userDao", new BeanDefinition(UserDao.class));
-        PropertyValues propertyValues = new PropertyValues();
-
-        propertyValues.addPropertyValue(new PropertyValue("uId","1001"));
-        propertyValues.addPropertyValue(new PropertyValue("userDao",new BeanReference("userDao")));
-        BeanDefinition beanDefinition = new BeanDefinition(UserService.class,propertyValues);
-        beanFactory.registerBeanDefinition("userService",beanDefinition);
-
+        XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(beanFactory);
+        reader.loadBeanDefinitions("classpath:spring.xml");
+        // 这里是getBean的问题，导致出现问题。UserService.class
         UserService userService = (UserService) beanFactory.getBean("userService");
         userService.queryInfo();
-
     }
 }
