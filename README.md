@@ -194,3 +194,43 @@ ResourceLoader能跟据文件前缀来读取并确认是什么样的文件类型
 
 ![流程1.png](img%2F%E6%B5%81%E7%A8%8B1.png)
 
+## 6.应用上下文
+我们使用了DefaultListableBeanFactory用来读取XML，并且实例化Bean仓库，但是这个仓库无法直接给到用户进行使用。因此我们需要有一个入口函数，这个入口函数来对这些操作进行统一的封装。
+从而给到用户进行直接使用。对外进行一个完整的服务提供。
+
+也就是说对于我们之前XML文件的读取，Bean的定义和注册，Bean的实例化，Bean的属性注入的流程都交给一个服务来进行处理。因此我们引入**应用上下文的概念**，由这个应用上下文来为我们解决这个问题。
+
+另外，我们需要用户在注册和实例化之间需要有别的定制化操作的时候，我们可以为用户添加一个接口，这样他们在Bean的实例化之前也可以做一些修改的操作。
+
+因此，从这个角度来看我们现在整体变成了这个流程：Bean定义-》Bean注册-》Bean修改(BeanFactoryPostProcess)-》Bean的实例化-》Bean的拓展(BeanPostProcessor)
+
+- BeanFactoryPostProcess -> 是一个在Bean对象定义、注册之后还没有实例化的情况下需要处理的。
+- BeanPostProcessor -> 是Bean在实例化之后需要去处理的事情。
+
+## 6.1 实现思路
+首先我们需要一个ApplicationContext,这个ApplicationContext帮我们完成所有的事情，传入的参数就是资源文件的路径。
+具体流程如下图：
+
+![流程2.png](img%2F%E6%B5%81%E7%A8%8B2.png)
+
+## 6.2 实现难度
+其实核心难度是如何去分配好这些类和方法在哪一个类里，不可能全部在一个类文件中。因此这部分工作还是需要分好结果，并且把握好继承关系。
+
+尤其是关于模版方法和抽象类的使用，一定要确定哪些方法哪些类是用来做什么的。**这个极为重要！要先想好这个完整的架构！！**如下面这个方法
+其实它就是不同的方法被不同的抽象类实现来完成的，这样能够保证每个方法都是不同的类在进行维护，也能统一每个方法的名字。
+```java
+        // 1. 创建BeanFactory，并且加载BeanDefinition
+        refreshBeanFactory();
+
+        // 2. 获取BeanFactory
+        ConfigurableListableBeanFactory beanFactory = getBeanFactory();
+
+        // 3. 在实例化Bean之前，执行BeanFactoryPostProcessor
+        invokeBeanFactoryPostProcessors(beanFactory);
+
+        // 4. BeanPostProcess 需要提前其他Bean实例化操作之前进行注册操作
+        registerBeanPostProcessor(beanFactory);
+
+        // 5. 提前实例化单例Bean对象
+        beanFactory.preInstantiateSingletons();
+```

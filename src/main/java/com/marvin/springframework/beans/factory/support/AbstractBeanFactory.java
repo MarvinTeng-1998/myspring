@@ -3,9 +3,13 @@ package com.marvin.springframework.beans.factory.support;
 import com.marvin.springframework.beans.BeansException;
 import com.marvin.springframework.beans.factory.BeanFactory;
 import com.marvin.springframework.beans.factory.config.BeanDefinition;
+import com.marvin.springframework.beans.factory.config.BeanPostProcessor;
+import com.marvin.springframework.beans.factory.config.ConfigurableBeanFactory;
 import com.marvin.springframework.beans.factory.config.SingletonBeanRegistry;
 import com.marvin.springframework.beans.factory.support.DefaultSingletonBeanRegistry;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -14,7 +18,34 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author: dengbin
  * @create: 2023-06-27 18:45
  **/
-public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry implements BeanFactory {
+public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry implements ConfigurableBeanFactory {
+
+    // 一个放着BeanPostProcessor的容器
+    private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<BeanPostProcessor>();
+
+    /*
+     * @Description: TODO 添加BeanPostProcessor到容器中去
+     * @Author: dengbin
+     * @Date: 30/6/23 16:44
+     * @param beanPostProcessor:
+     * @return: void
+     **/
+    @Override
+    public void addBeanPostProcessor(BeanPostProcessor beanPostProcessor){
+        this.beanPostProcessors.remove(beanPostProcessor);
+        this.beanPostProcessors.add(beanPostProcessor);
+    }
+
+    /*
+     * @Description: TODO 获取BeanPostProcessors的容器
+     * @Author: dengbin
+     * @Date: 30/6/23 16:46
+
+     * @return: java.util.List<com.marvin.springframework.beans.factory.config.BeanPostProcessor>
+     **/
+    public List<BeanPostProcessor> getBeanPostProcessors(){
+        return beanPostProcessors;
+    }
 
     /*
      * @Description: TODO 用来获取Bean对象的方法，这里用来获取Bean实例。
@@ -25,13 +56,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
      **/
     @Override
     public Object getBean(String beanName) throws BeansException {
-        Object singleton = getSingleton(beanName);
-        if (singleton != null) {
-            return singleton;
-        }
-
-        BeanDefinition beanDefinition = getBeanDefinition(beanName);
-        return createBean(beanName, beanDefinition);
+        return doGetBean(beanName,null);
     }
 
     /*
@@ -44,12 +69,21 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
      **/
     @Override
     public Object getBean(String beanName, Object... args) {
+        return doGetBean(beanName, args);
+    }
+
+    @Override
+    public <T> T getBean(String beanName, Class<T> requiredType) throws BeansException {
+        return (T) getBean(beanName);
+    }
+
+    private <T> T doGetBean(final String beanName, final Object[] args) {
         Object singleton = getSingleton(beanName);
         if(singleton != null){
-            return singleton;
+            return (T) singleton;
         }
         BeanDefinition beanDefinition = getBeanDefinition(beanName);
-        return createBean(beanName,beanDefinition,args);
+        return (T) createBean(beanName, beanDefinition, args);
     }
 
     /*
@@ -60,16 +94,6 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
      * @return: com.marvin.springframework.beans.factory.config.BeanDefinition
      **/
     protected abstract BeanDefinition getBeanDefinition(String beanName) throws BeansException;
-
-    /*
-     * @Description: TODO 创建一个Bean，当我们发现我们Singleton容器中没有Bean时，调用这个方法去创建一个Bean
-     * @Author: dengbin
-     * @Date: 27/6/23 23:06
-     * @param beanName: Bean在容器中的名字
-     * @param beanDefinition: Bean的定义
-     * @return: java.lang.Object
-     **/
-    protected abstract Object createBean(String beanName, BeanDefinition beanDefinition);
 
 
     /*

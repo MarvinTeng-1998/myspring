@@ -39,4 +39,6 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
     public ResourceLoader getResourceLoader() {
         return resourceLoader;
     }
+
+
 }

@@ -4,5 +4,9 @@
     <bean id="userService" class="com.marvin.bean.UserService">
         <property name="uId" value="1001"/>
         <property name="userDao" ref="userDao"/>
+        <property name="company" value="腾讯"/>
+        <property name="location" value="深圳"/>
     </bean>
+    <bean class="com.marvin.processor.MyBeanPostProcessor"/>
+    <bean class="com.marvin.processor.MyBeanFactoryPostProcessor"/>
 </beans>

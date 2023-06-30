@@ -1,5 +1,7 @@
 package com.marvin.springframework.beans.factory;
 
+import com.marvin.springframework.beans.BeansException;
+
 /**
  * @TODO: 这是BeanFactory的抽象工厂，定义一个获取Bean的方法
  * @author: dengbin
@@ -25,4 +27,14 @@ public interface BeanFactory {
      * @return: java.lang.Object
      **/
     Object getBean(String beanName,Object... args);
+
+    /*
+     * @Description: TODO 根据Bean名字和Bean的类型来获取Bean
+     * @Author: dengbin
+     * @Date: 30/6/23 16:25
+     * @param name:
+     * @param requiredType:
+     * @return: T
+     **/
+    <T> T getBean(String beanName, Class<T> requiredType) throws BeansException;
 }
