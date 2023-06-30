@@ -17,4 +17,8 @@ public interface ConfigurableApplicationContext extends ApplicationContext{
      * @return: void
      **/
     void refresh() throws BeansException;
+
+    void registerShutdownHook();
+
+    void close();
 }

@@ -14,4 +14,7 @@ public interface SingletonBeanRegistry {
      * @return: java.lang.Object
      **/
     Object getSingleton(String beanName);
+
+
+    void destroySingletons();
 }

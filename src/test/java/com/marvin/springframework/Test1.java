@@ -1,15 +1,9 @@
 package com.marvin.springframework;
 
 import cn.hutool.core.io.IoUtil;
-import com.marvin.bean.UserDao;
 import com.marvin.bean.UserService;
 import com.marvin.processor.MyBeanFactoryPostProcessor;
 import com.marvin.processor.MyBeanPostProcessor;
-import com.marvin.springframework.beans.PropertyValue;
-import com.marvin.springframework.beans.PropertyValues;
-import com.marvin.springframework.beans.factory.BeanFactory;
-import com.marvin.springframework.beans.factory.config.BeanDefinition;
-import com.marvin.springframework.beans.factory.config.BeanReference;
 import com.marvin.springframework.beans.factory.support.DefaultListableBeanFactory;
 import com.marvin.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import com.marvin.springframework.context.support.ClassPathXmlApplicationContext;
@@ -83,6 +77,7 @@ public class Test1 {
     public void test_xml(){
         // 1.初始化BeanFactory
         ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:spring.xml");
+        applicationContext.registerShutdownHook();
         UserService userService = applicationContext.getBean("userService", UserService.class);
         System.out.println(userService.toString());
     }

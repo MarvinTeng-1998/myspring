@@ -234,3 +234,35 @@ ResourceLoader能跟据文件前缀来读取并确认是什么样的文件类型
         // 5. 提前实例化单例Bean对象
         beanFactory.preInstantiateSingletons();
 ```
+
+## 7. Bean的初始化和销毁方法
+在Bean初始化过程中，我们可以做一些数据的加载执行、链接注册中心暴露RPC接口以及在WEB程序关闭时执行链接断开。
+
+主要需求：
+- 在XML配置初始化和销毁的方法，通过InitializingBean、DisposableBean两个接口。
+
+**配置Bean初始化和销毁的四个办法：**
+1. Bean继承InitializingBean和DisposableBean接口。
+2. 使用注解@Bean(initMethod = "",destroyMethod = "")
+3. 使用BeanPostProcessor来进行。
+4. 类中使用@PostConstruct 或者 使用@PreDestroy。前者是在Servlet加载后使用，后者是在Servlet卸载前。
+
+## 7.1 设计思路
+以XML为例子：在spring.xml给Bean对象配置init-method和destroy-method的内容，配置问价加载的时候也读出来这两个节点的内容并加载到BeanDefinition中去。这样就可以在Bean初始化的过程中使用反射机制来调用这样方法。
+
+如果是通过实现接口的方式的话，直接通过bean对象调用对应的接口方法就行。两个效果是一样的。
+
+除了在初始化做的操作以外，destroy-method和DisposableBean接口的定义，都会在Bean对象初始化阶段完成，执行注册销毁方法的信息到DefaultSingletonBeanRegistry类中的disposableBeans属性里，这是为了后续进行统一调用。
+
+**关于销毁方法需要在虚拟机执行关闭之前进行操作，所以这里用了一个注册钩子的操作。**
+
+在我们判断关闭的过程中，我们使用了设计模式，适配器模式。主要是因为这里我们用了两种可能出现销毁前的方法。
+
+- 一个是通过直接调用接口中方法的方式来直接实现销毁前的处理
+- 一种是通过获取到XML中的方法，然后反射的方式来调用这个方法
+
+为什么需要使用设计模式呢？
+
+主要是因为，在我们关闭的时候，不想去处理或者是判断这个逻辑，而是直接封装成同一个逻辑来进行使用。因而我们使用适配器模式，让两个不能在一起的方法在同一个方法中进行判断执行，做统一执行了。
+
+## 

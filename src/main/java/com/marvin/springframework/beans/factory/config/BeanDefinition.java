@@ -14,6 +14,28 @@ public class BeanDefinition {
     // Bean对象需要填充的属性集合
     private final PropertyValues propertyValues;
 
+    // 初始化Bean的方法
+    private String initMethodName;
+
+    // 销毁Bean的方法名字
+    private String destroyMethodName;
+
+    public String getInitMethodName() {
+        return initMethodName;
+    }
+
+    public void setInitMethodName(String initMethodName) {
+        this.initMethodName = initMethodName;
+    }
+
+    public String getDestroyMethodName() {
+        return destroyMethodName;
+    }
+
+    public void setDestroyMethodName(String destroyMethodName) {
+        this.destroyMethodName = destroyMethodName;
+    }
+
     /*
      * @Description: TODO 创建一个BeanDefinition对象
      * @Author: dengbin

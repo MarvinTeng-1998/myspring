@@ -95,4 +95,21 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
     public String[] getBeanDefinitionNames() {
         return getBeanFactory().getBeanDefinitionNames();
     }
+
+    /*
+     * @Description: TODO 这是一个关闭的时候的钩子函数，会去新创建一个线程去销毁所有的singletons资源
+     * @Author: dengbin
+     * @Date: 30/6/23 23:33
+
+     * @return: void
+     **/
+    @Override
+    public void registerShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+    }
+
+    @Override
+    public void close() {
+        getBeanFactory().destroySingletons();
+    }
 }

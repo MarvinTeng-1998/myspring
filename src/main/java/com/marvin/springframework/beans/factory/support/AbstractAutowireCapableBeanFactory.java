@@ -1,15 +1,19 @@
 package com.marvin.springframework.beans.factory.support;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.marvin.springframework.beans.BeansException;
 import com.marvin.springframework.beans.PropertyValue;
 import com.marvin.springframework.beans.PropertyValues;
+import com.marvin.springframework.beans.factory.DisposableBean;
+import com.marvin.springframework.beans.factory.InitializingBean;
 import com.marvin.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import com.marvin.springframework.beans.factory.config.BeanDefinition;
 import com.marvin.springframework.beans.factory.config.BeanPostProcessor;
 import com.marvin.springframework.beans.factory.config.BeanReference;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 
 /**
  * @TODO: 抽象方法，主要实现createBean的方法。
@@ -69,6 +73,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         } catch (Exception e) {
             throw new BeansException("Instantiation of bean failed",e);
         }
+        registerDisposableBeanIfNecessary(beanName,bean,beanDefinition);
         addSingleton(beanName,bean);
         return bean;
     }
@@ -95,7 +100,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
      * @param beanDefinition:
      * @return: java.lang.Object
      **/
-    private  Object initializeBean(String beanName, Object bean, BeanDefinition beanDefinition){
+    private  Object initializeBean(String beanName, Object bean, BeanDefinition beanDefinition) throws Exception {
         // 1. 执行BeanPostProcessor Before处理
         Object wrappedBean = applyBeanPostProcessorsBeforeInitialization(bean,beanName);
         // 待完成，invokeInitMethods(beanName,wrappedBean,beanDefinition
@@ -105,8 +110,27 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         return wrappedBean;
     }
 
-    private void invokeInitMethods(String beanName, Object wrappedBean, BeanDefinition beanDefinition) {
-
+    /*
+     * @Description: TODO 调用Bean初始化方法
+     * @Author: dengbin
+     * @Date: 30/6/23 22:03
+     * @param beanName:
+     * @param wrappedBean:
+     * @param beanDefinition:
+     * @return: void
+     **/
+    private void invokeInitMethods(String beanName, Object wrappedBean, BeanDefinition beanDefinition) throws Exception {
+        if(wrappedBean instanceof InitializingBean){
+            ((InitializingBean)wrappedBean).afterPropertiesSet();
+        }
+        String initMethodName = beanDefinition.getInitMethodName();
+        if(StrUtil.isNotEmpty(initMethodName)){
+            Method initMethod = beanDefinition.getBeanClass().getMethod(initMethodName);
+            if(null ==  initMethod){
+                throw new BeansException("Could not find the init method named + '" + initMethodName + "' on bean with name " + beanName);
+            }
+            initMethod.invoke(wrappedBean);
+        }
     }
 
     /*
@@ -122,7 +146,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         Object result = existingBean;
         for(BeanPostProcessor processor : getBeanPostProcessors()){
             Object current = processor.postProcessBeforeInitialization(result,beanName);
-            if(null == current) return result;
+            if(null == current) {
+                return result;
+            }
             result = current;
         }
         return result;
@@ -141,9 +167,17 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         Object result = existingBean;
         for(BeanPostProcessor processor : getBeanPostProcessors()){
             Object current = processor.postProcessAfterInitialization(result,beanName);
-            if(null == current) return result;
+            if(null == current) {
+                return result;
+            }
             result = current;
         }
         return result;
+    }
+
+    protected void registerDisposableBeanIfNecessary(String beanName, Object bean, BeanDefinition beanDefinition){
+        if(bean instanceof DisposableBean || StrUtil.isNotEmpty(beanDefinition.getDestroyMethodName())){
+            registerDisposableBean(beanName, new DisposableBeanAdapter(bean,beanName,beanDefinition));
+        }
     }
 }
