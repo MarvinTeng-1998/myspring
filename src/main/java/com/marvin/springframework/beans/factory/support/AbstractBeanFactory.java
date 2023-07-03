@@ -3,6 +3,7 @@ package com.marvin.springframework.beans.factory.support;
 import cn.hutool.core.util.ClassLoaderUtil;
 import com.marvin.springframework.beans.BeansException;
 import com.marvin.springframework.beans.factory.BeanFactory;
+import com.marvin.springframework.beans.factory.FactoryBean;
 import com.marvin.springframework.beans.factory.config.BeanDefinition;
 import com.marvin.springframework.beans.factory.config.BeanPostProcessor;
 import com.marvin.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -19,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author: dengbin
  * @create: 2023-06-27 18:45
  **/
-public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry implements ConfigurableBeanFactory {
+public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport implements ConfigurableBeanFactory {
 
     // 一个放着BeanPostProcessor的容器
     private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<BeanPostProcessor>();
@@ -84,12 +85,28 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
     private <T> T doGetBean(final String beanName, final Object[] args) {
         Object singleton = getSingleton(beanName);
         if(singleton != null){
-            return (T) singleton;
+            // 需要去判断这个singleton是不是FactoryBean，实际上我们需要返回的是这个FactoryBean给getObject出来的对象，不一定是这个FactoryBean本身。
+            return (T) getObjectForBeanInstance(singleton, beanName);
         }
         BeanDefinition beanDefinition = getBeanDefinition(beanName);
-        return (T) createBean(beanName, beanDefinition, args);
+        Object bean = createBean(beanName,beanDefinition,args);
+        return (T) getObjectForBeanInstance(bean,beanName);
     }
 
+    private Object getObjectForBeanInstance(Object beanInstance, String beanName){
+        // 判断获得的这个Bean是不是FactoryBean，如果是则需要去调用FactoryBean的getObject方法
+        if(!(beanInstance instanceof FactoryBean)){
+            return beanInstance;
+        }
+        // 这里是去拿到在FactoryBean缓存中的Bean对象。
+        Object object = getCacheObjectForFactoryBean(beanName);
+        if(object == null){
+            // 这里是FactoryBean缓存中没有这个Bean对象，然后需要去重新getObject
+            FactoryBean factoryBean = (FactoryBean) beanInstance;
+            object = getObjectFromFactoryBean(factoryBean, beanName);
+        }
+        return object;
+     }
     /*
      * @Description: TODO 主要是获取BeanDefinition，也就是说我们把BeanDefinition的容器放到抽象工厂的子类下去了，使用了模版模式。
      * @Author: dengbin

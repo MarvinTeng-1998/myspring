@@ -288,3 +288,34 @@ getBean -> doGetBean -> createBean -> 创建Bean实例 -> 属性注入 -> 执行
 
 > 1. 这里ApplicationContext是在后面进行创建的，其实它不无法通过BeanFactory来进行注入，因此我们使用BeanPostProcessor的方式去进行设置。
 > 2. Aware接口可以理解为用来 **获取某些容器对象**的方法。获取容器对象是为了想利用容器对象的能力/服务。
+
+## 9.对象作用域和FactoryBean
+在MyBatis框架中，它的核心作用是可以满足用户不需要实现Dao接口类就可以通过xml或者注解配置的方式完成对数据库执行CURD操作。我们并没有手动的去创建任何操作数据库的对象，有的仅仅是一个接口的定义而这个接口定义可以被注入到其他需要使用Dao的属性中，这一过程最核心的问题就是把复杂而且以代理方式动态变化的对象注册到Spring容器中。
+
+**核心目的：提供一个能让使用者定义负责的Bean对象。**也就是说对外提供一个可以二次从FactoryBean的getObject方法中获取对象的功能即可，这样所有实现这个接口的对象类就可以扩充自己的对象功能呢。
+
+**MyBatis就是实现了一个MapperFactoryBean类，在getObject方法中提供SqlSession对象，从而执行CURD方法的操作**
+
+### 9.1 设计思路：
+解决单例还是原型对象，另一个处理FactoryBean类型对象创建过程中关于获取具体调用对象的getObject操作。
+
+SCOPE_SINGLETON、SCOPE_PROTOTYPE对象创建的获取方式。主要区别于createBean后对象是否放到内存，不放到每次就需要重新叉棍见。
+
+createBean执行对象创建、属性填充、依赖加载、前置后置处理、初始化等操作后，就需要再执行获取FactoryBean中的getObject对象了，整个getBean过程中都会新增一个单例的判断。
+
+### 9.2 设计思想：
+其实整个设计过程都是针对Bean的初始化过程来做的。当我们注册完Bean后，我们会得到Bean的类型：是单例的还是原型的。
+
+同时我们在对类进行初始化的过程中，我们会先去singletonMap中去找目前singletonMap中是否有这个Bean。如果没有这个Bean的时候我们就走到创建Bean的流程中。
+
+我们创建Bean的过程先是走的是Bean的实例化：传统类构造器实例化或者是Cglib反射实例化的方式。
+
+然后走完实例化的过程，我们会去拿到这个对象，然后去对这个Bean去判断它是不是FactoryBean，如果是FactoryBean我们则会去走FactoryBean的getObject方法，从而去拿到这个FactoryBean创建的Bean。
+
+同时这个FactoryBean有一个继承了DefaultSingletonRegistry的注册器,FactoryBeanRegistrySupport，在这个类中，其实我们也是放了一个容器来存放很多FactoryBean的Object。Key为FactoryBean的beanName，value为Object。
+
+这样我们就完成了整个FactoryBean的工作流程。
+
+![流程3.png](img%2F%E6%B5%81%E7%A8%8B3.png)
+
+

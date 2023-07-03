@@ -8,6 +8,8 @@ import com.marvin.springframework.beans.PropertyValues;
  * @create: 2023-06-27 18:44
  **/
 public class BeanDefinition {
+    String SCOPE_SINGLETON = ConfigurableBeanFactory.SCOPE_SINGLETON;
+    String SCOPE_PROTOTYPE = ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
     private final Class<?> beanClass;
 
@@ -19,6 +21,12 @@ public class BeanDefinition {
 
     // 销毁Bean的方法名字
     private String destroyMethodName;
+
+    private String scope = SCOPE_SINGLETON;
+
+    private boolean singleton = true;
+
+    private boolean prototype = false;
 
     public String getInitMethodName() {
         return initMethodName;
@@ -59,5 +67,17 @@ public class BeanDefinition {
 
     public PropertyValues getPropertyValues() {
         return propertyValues;
+    }
+
+    public void setScope(String scope) {
+        this.scope = scope;
+    }
+
+    public String getScope() {
+        return scope;
+    }
+
+    public boolean isSingleton(){
+        return singleton;
     }
 }

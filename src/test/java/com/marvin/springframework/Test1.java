@@ -26,6 +26,7 @@ import java.io.InputStream;
  * @create: 2023-06-27 22:21
  **/
 @Slf4j
+
 public class Test1 {
     private DefaultResourceLoader resourceLoader;
 
@@ -92,4 +93,6 @@ public class Test1 {
         System.out.println(userService.getBeanFactory());
         System.out.println(userService.getApplicationContext());
     }
+
+
 }
