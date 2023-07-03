@@ -1,5 +1,6 @@
 package com.marvin.springframework.beans.factory.support;
 
+import cn.hutool.core.util.ClassLoaderUtil;
 import com.marvin.springframework.beans.BeansException;
 import com.marvin.springframework.beans.factory.BeanFactory;
 import com.marvin.springframework.beans.factory.config.BeanDefinition;
@@ -22,6 +23,9 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
 
     // 一个放着BeanPostProcessor的容器
     private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<BeanPostProcessor>();
+
+    // 一个存放BeanClassLoader的容器
+    private ClassLoader beanClassLoader = ClassLoaderUtil.getClassLoader();
 
     /*
      * @Description: TODO 添加BeanPostProcessor到容器中去
@@ -107,4 +111,8 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
      **/
     protected abstract Object createBean(String beanName, BeanDefinition beanDefinition,Object[] args);
 
+
+    public ClassLoader getBeanClassLoader(){
+        return this.beanClassLoader;
+    }
 }

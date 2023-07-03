@@ -4,23 +4,18 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.XmlUtil;
 import com.marvin.springframework.beans.BeansException;
 import com.marvin.springframework.beans.PropertyValue;
-import com.marvin.springframework.beans.PropertyValues;
 import com.marvin.springframework.beans.factory.config.BeanDefinition;
 import com.marvin.springframework.beans.factory.config.BeanReference;
 import com.marvin.springframework.beans.factory.support.AbstractBeanDefinitionReader;
-import com.marvin.springframework.beans.factory.support.BeanDefinitionReader;
 import com.marvin.springframework.beans.factory.support.BeanDefinitionRegistry;
 import com.marvin.springframework.core.io.Resource;
 import com.marvin.springframework.core.io.ResourceLoader;
-import com.sun.xml.internal.ws.util.StringUtils;
-import jdk.internal.util.xml.impl.Input;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.annotation.Documented;
 
 /**
  * @TODO: 解析XML并将Bean注册到BeanDefinition中

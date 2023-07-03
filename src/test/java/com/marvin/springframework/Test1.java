@@ -81,4 +81,15 @@ public class Test1 {
         UserService userService = applicationContext.getBean("userService", UserService.class);
         System.out.println(userService.toString());
     }
+
+    @Test
+    public void test_xmlabc(){
+        ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:spring.xml");
+        applicationContext.registerShutdownHook();
+
+        UserService userService = applicationContext.getBean("userService",UserService.class);
+        userService.queryInfo();
+        System.out.println(userService.getBeanFactory());
+        System.out.println(userService.getApplicationContext());
+    }
 }
