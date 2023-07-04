@@ -1,0 +1,30 @@
+package com.marvin.aop;
+
+import java.util.Random;
+
+/**
+ * @TODO:
+ * @author: dengbin
+ * @create: 2023-07-04 18:37
+ **/
+public class AopUserServiceImpl implements AopUserService{
+    @Override
+    public String queryUserInfo() {
+        try {
+            Thread.sleep(new Random(1).nextInt(100));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return "小傅哥，100001，深圳";
+    }
+
+    @Override
+    public String register(String userName) {
+        try {
+            Thread.sleep(new Random(1).nextInt(100));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return "注册用户：" + userName + " success！";
+    }
+}

@@ -136,6 +136,14 @@ public interface InvocationHandler {
 4. 因为JDK动态代理需要去继承一个中介类，所以实际上我们没办法基于类对象去做代理，因为Java的单继承特性。因而只能通过接口的方式代理，并且将目标对象作为中介类的属性传入。
 #### 3.2.3 Cglib动态代理
 
+Cglib动态代理示基于ASM机制实现的，通过生成被代理类的子类来实现。
+
+主要模式是：
+1. 查找目标类上所有非final的public类型的方法定义
+2. 将这些方法的定义转换成字节码
+3. 将组成的字节码转换成相应的代理的Class对象
+4. 实现MethodInterceptor接口，用来代理对代理类上所有方法的请求。
+
 #### 3.2.4 AspectJ动态代理
 
 
@@ -346,6 +354,8 @@ EventObject->ApplicationEvent->ApplicationContextEvent->ContextClosedEvent\Conte
 7. 容器关闭事件触发，容器关闭监听器对应进行处理。
 8. 容器关闭，销毁所有的singleton对象。
 
+![流程4.png](img%2F%E6%B5%81%E7%A8%8B4.png)
+
 ### 10.3 观察者模式
 又称为发布订阅者模式，是一种通知机制，让发送通知的一方（被观察方）和接受通知的一方（观察者）彼此分离，不受影响。
 
@@ -353,4 +363,35 @@ EventObject->ApplicationEvent->ApplicationContextEvent->ContextClosedEvent\Conte
 
 使用观察者模式的优点是：拓展性强，可以定义很多被观察者和观察者。降低系统和系统之间的耦合性，比如建立订阅者集合，可以随时添加和删除集合当中的某一个元素。
 
+## 11 AOP的实现
+AOP：面向切面编程，通过预编译的方式和运行期间动态代理实现程序功能的统一维护。
 
+## 11.1 设计思路
+先来实现一个可以代理方法的Proxy，代理方法主要使用到方法拦截器类 MethodInterceptor#invoke而不是直接使用invoke
+
+以及还需要使用到org.aspectj.weaver.tools.PointcutParser 处理拦截表达式。
+
+**对于JDK代理AOP实现方式：**
+1. 其实核心的方式使用的是先创建被代理对象
+2. 实例化方法拦截器 MethodInterceptor
+3. 添加切入点匹配器 AspectJExpressionPointcut
+4. 获取JDK代理对象
+
+具体如下图所示：
+
+![JDK AOP.png](img%2FJDK%20AOP.png)
+
+**对于Cglib代理AOP实现方式：**
+1. 先创建被代理对象
+2. 实例化方法拦截器 MethodInterceptor
+3. 添加切入点匹配器 AspectJExpressionPointcut
+4. 获取JDK代理对象
+
+具体如下图：
+![CglibAOP.png](img%2FCglibAOP.png)
+
+Cglib的注意事项：
+- 其实Cglib核心是通过继承被代理类的方式来实现代理的逻辑。所以它不仅只是可以基于接口来进行代理，它还可以针对类来进行代理。
+- 主要是使用ASM字节码的方式来代理对象，因此效率是高于JDK动态代理的。
+- CGLib在创建代理对象时所花费的时间却比JDK多得多，所以对于单例的对象，因为无需频繁创建对象，用CGLib合适，反之，使用JDK方式要更为合适一些。
+- 由于CGLib由于是采用动态创建子类的方法，对于final方法，无法进行代理。
