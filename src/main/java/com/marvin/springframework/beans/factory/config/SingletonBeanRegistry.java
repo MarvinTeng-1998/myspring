@@ -17,4 +17,7 @@ public interface SingletonBeanRegistry {
 
 
     void destroySingletons();
+
+    void addSingleton(String beanName, Object singletonObject);
+
 }

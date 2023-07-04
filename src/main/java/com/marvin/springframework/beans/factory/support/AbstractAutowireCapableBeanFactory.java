@@ -193,4 +193,6 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             registerDisposableBean(beanName, new DisposableBeanAdapter(bean, beanName, beanDefinition));
         }
     }
+
+
 }

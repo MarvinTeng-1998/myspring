@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans>
+    <bean class = "com.marvin.event.CustomEventListener"/>
+    <bean class = "com.marvin.event.ContextClosedEventListener"/>
+    <bean class = "com.marvin.event.ContextRefreshedEventListener"/>
+</beans>

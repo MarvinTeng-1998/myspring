@@ -1,5 +1,6 @@
 package com.marvin.springframework;
 
+import com.marvin.event.CustomEvent;
 import com.marvin.springframework.context.support.ClassPathXmlApplicationContext;
 import com.marvin.testNew.IUserService;
 import org.junit.Test;
@@ -24,4 +25,12 @@ public class Test2 {
     //     System.out.println("两个对象是否相等：" + String.valueOf( iUserService01 == iUserService02));
     //
     // }
+
+    @Test
+    public void test_event(){
+        ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:spring3.xml");
+        applicationContext.registerShutdownHook();
+
+        applicationContext.publishEvent(new CustomEvent(applicationContext, 12334535123L,"发布一个新事件！"));
+    }
 }

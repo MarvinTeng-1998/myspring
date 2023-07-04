@@ -6,9 +6,16 @@ import com.marvin.springframework.beans.factory.ConfigurableListableBeanFactory;
 import com.marvin.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import com.marvin.springframework.beans.factory.config.BeanPostProcessor;
 import com.marvin.springframework.beans.factory.config.ConfigurableBeanFactory;
+import com.marvin.springframework.context.ApplicationEvent;
+import com.marvin.springframework.context.ApplicationListener;
 import com.marvin.springframework.context.ConfigurableApplicationContext;
+import com.marvin.springframework.context.event.ApplicationEventMulticaster;
+import com.marvin.springframework.context.event.ContextClosedEvent;
+import com.marvin.springframework.context.event.ContextRefreshEvent;
+import com.marvin.springframework.context.event.SimpleApplicationEventMulticaster;
 import com.marvin.springframework.core.io.DefaultResourceLoader;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -17,6 +24,10 @@ import java.util.Map;
  * @create: 2023-06-30 15:37
  **/
 public abstract class AbstractApplicationContext extends DefaultResourceLoader implements ConfigurableApplicationContext {
+    // 定义广播器的名字为常量
+    public static final String APPLICACATION_EVENT_MULTICASTER_BEAN_NAME = "applicationEventMulticaster";
+
+    private ApplicationEventMulticaster applicationEventMulticaster;
     @Override
     public void refresh() throws BeansException {
         // 1. 创建BeanFactory，并且加载BeanDefinition
@@ -25,18 +36,28 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
         // 2. 获取BeanFactory
         ConfigurableListableBeanFactory beanFactory = getBeanFactory();
 
-        // 添加ApplicationContextAwareProcessor ，让继承自ApplicationContextAware的Bean对象都能感知到所属的ApplicationContext
+        // 3. 添加ApplicationContextAwareProcessor ，让继承自ApplicationContextAware的Bean对象都能感知到所属的ApplicationContext
         beanFactory.addBeanPostProcessor(new ApplicationContextAwareProcessor(this));
 
-        // 3. 在实例化Bean之前，执行BeanFactoryPostProcessor
+        // 4. 在实例化Bean之前，执行BeanFactoryPostProcessor
         invokeBeanFactoryPostProcessors(beanFactory);
 
-        // 4. BeanPostProcess 需要提前其他Bean实例化操作之前进行注册操作
+        // 5. BeanPostProcess 需要提前其他Bean实例化操作之前进行注册操作
         registerBeanPostProcessor(beanFactory);
 
-        // 5. 提前实例化单例Bean对象
+
+
+        // 6. 初始化事件发布者
+        initApplicationEventMulticaster();
+
+        // 7. 注册事件监听器
+        registerListeners();
+
+        // 8. 提前实例化单例Bean对象
         beanFactory.preInstantiateSingletons();
 
+        // 9.发布容器刷新完成事件
+        finishRefresh();
     }
 
     protected abstract void refreshBeanFactory() throws BeansException;
@@ -113,6 +134,44 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
 
     @Override
     public void close() {
+        publishEvent(new ContextClosedEvent(this));
         getBeanFactory().destroySingletons();
+    }
+
+    /*
+     * @Description: TODO 初始化事件广播器，提前注册这个容器
+     * @Author: dengbin
+     * @Date: 4/7/23 15:24
+
+     * @return: void
+     **/
+    private void initApplicationEventMulticaster(){
+        ConfigurableListableBeanFactory beanFactory = getBeanFactory();
+        // 创建一个事件广播器Bean，交给Spring容器来管理。
+        applicationEventMulticaster = new SimpleApplicationEventMulticaster(beanFactory);
+        // 将事件广播器给注册到Singleton容器中
+        beanFactory.addSingleton(APPLICACATION_EVENT_MULTICASTER_BEAN_NAME,applicationEventMulticaster);
+    }
+
+    /*
+     * @Description: TODO 将所有的事件监听器注册到容器中
+     * @Author: dengbin
+     * @Date: 4/7/23 15:26
+
+     * @return: void
+     **/
+    private void registerListeners(){
+        Collection<ApplicationListener> applicationListeners = getBeansOfType(ApplicationListener.class).values();
+        for(ApplicationListener listener : applicationListeners){
+            applicationEventMulticaster.addApplicationListener(listener);
+        }
+    }
+
+    private void finishRefresh(){
+        publishEvent(new ContextRefreshEvent(this));
+    }
+    @Override
+    public void publishEvent(ApplicationEvent event){
+        applicationEventMulticaster.multicastEvent(event);
     }
 }

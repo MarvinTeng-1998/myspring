@@ -319,3 +319,38 @@ createBean执行对象创建、属性填充、依赖加载、前置后置处理�
 ![流程3.png](img%2F%E6%B5%81%E7%A8%8B3.png)
 
 
+## 10 容器事件和事件监听器
+Spring中有一个Event事件监听器，它可以提供事件的定义、发布以及监听事件来完成一些自定义的操作。比如可以定义一个新用户注册的事件，当有用户执行注册完成后，在事件监听中给用户发送一些优惠券和短信提醒，这样的操作就可以把属于基本功能的注册和对应的策略服务分开，降低系统的耦合。
+
+这节以观察者模式的方式，设计和实现Spring Event中的容器事件和事件监听器，**最后可以在Spring框架中定义、监听和发布自己的事件信息。**
+
+### 10.1 设计思想
+基于观察者模式，要解决的就是一个对象状态改变给其他对象通知的问题。定义事件类、事件监听、事件发布。
+
+使用观察者模式定义事件类、监听类、发布类，同时还需要完成一个广播器的功能，接收到事件推送时进行分析处理符合接受者感兴趣的事件。也就是使用isAssignFrom的判断。
+
+isAssignFrom和instance类似，不过isAssignFrom是用来判断子类和父类的关系的，或者接口的实现类和接口的关系的，默认所有的类的终极父类都是Object，如果A.isAssignFrom(B)的结果是true，则证明B可以转换成A。
+
+也就是说instanceof是 A->B，A是B的实现。isAssignFrom:A.B,B是A的实现
+
+**ApplicationContextEvent是定义事件的抽象类，所有的事件包括关闭、刷新以及用户自己实现的事件都需要继承这个类。ContextClosedEvent和ContextRefreshEvent是Spring自己实现的两个事件类，可以用来监听刷新和关闭动作。**
+EventObject->ApplicationEvent->ApplicationContextEvent->ContextClosedEvent\ContextRefreshEvent
+
+### 10.2 设计流程
+1. 创建ApplicationContext，读取XML文件，加载BeanDefinitions，其中包含设计的EventListeners
+2. initApplicationEventMulticaster，初始化事件广播器，并和BeanFactory绑定。最后添加到Singleton容器中，交给Spring进行管理。
+3. 从Spring容器中注册所有的事件监听器（先根据ApplicationListener从BeanDefinition中拿到所有属于ApplicationListener类型的对象，然后进行实例化操作。）然后添加到ApplicationListeners容器中。
+4. 实例化其他单例对象。
+5. 发布容器刷新完成事件。
+6. 发布一个事件，通过ApplicationContext中的属性ApplicationEventMultiCaster进行事件发布，然后会有对应的监听器执行onApplicationEvent(event)方法来对这个事件发生进行对应的处理。
+7. 容器关闭事件触发，容器关闭监听器对应进行处理。
+8. 容器关闭，销毁所有的singleton对象。
+
+### 10.3 观察者模式
+又称为发布订阅者模式，是一种通知机制，让发送通知的一方（被观察方）和接受通知的一方（观察者）彼此分离，不受影响。
+
+对象之间是一对多的依赖关系，当一个对象改变状态时，它的所有依赖项都会自动得到通知和更新。
+
+使用观察者模式的优点是：拓展性强，可以定义很多被观察者和观察者。降低系统和系统之间的耦合性，比如建立订阅者集合，可以随时添加和删除集合当中的某一个元素。
+
+
