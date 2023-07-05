@@ -6,10 +6,7 @@ import com.marvin.springframework.beans.BeansException;
 import com.marvin.springframework.beans.PropertyValue;
 import com.marvin.springframework.beans.PropertyValues;
 import com.marvin.springframework.beans.factory.*;
-import com.marvin.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import com.marvin.springframework.beans.factory.config.BeanDefinition;
-import com.marvin.springframework.beans.factory.config.BeanPostProcessor;
-import com.marvin.springframework.beans.factory.config.BeanReference;
+import com.marvin.springframework.beans.factory.config.*;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -64,6 +61,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     protected Object createBean(String beanName, BeanDefinition beanDefinition, Object[] args) {
         Object bean = null;
         try {
+            // 判断是否应该返回代理对象
+            bean = resolveBeforeInstantiation(beanName,beanDefinition);
+            if(null != bean){
+                return bean;
+            }
             bean = createBeanInstance(beanDefinition, beanName, args);
             // 这里是主要做了一个属性注入。
             applyPropertyValues(beanName, bean, beanDefinition);
@@ -78,6 +80,42 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             addSingleton(beanName, bean);
         }
         return bean;
+    }
+
+    /*
+     * @Description: TODO 判断Bean是否应该返回的是代理对象，如果是则直接用代理模式返回即可
+     * @Author: dengbin
+     * @Date: 5/7/23 17:23
+     * @param beanName:
+     * @param beanDefinition:
+     * @return: java.lang.Object
+     **/
+    protected Object resolveBeforeInstantiation(String beanName, BeanDefinition beanDefinition){
+        Object bean = applyBeanPostProcessorsBeforeInstantiation(beanDefinition.getBeanClass(), beanName);
+        if(null != bean){
+            bean = applyBeanPostProcessorsAfterInitialization(bean,beanName);
+        }
+        return bean;
+    }
+
+    /*
+     * @Description: TODO 调用代理模式的BeanPostProcessor
+     * @Author: dengbin
+     * @Date: 5/7/23 17:25
+     * @param beanClass:
+     * @param beanName:
+     * @return: java.lang.Object
+     **/
+    protected Object applyBeanPostProcessorsBeforeInstantiation(Class<?> beanClass, String beanName){
+        for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
+            if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
+                Object result = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessBeforeInitialization(beanClass, beanName);
+                if (null != result) {
+                    return result;
+                }
+            }
+        }
+        return null;
     }
 
     protected Object createBeanInstance(BeanDefinition beanDefinition, String beanName, Object[] args) {
@@ -118,7 +156,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         // 待完成，invokeInitMethods(beanName,wrappedBean,beanDefinition
         invokeInitMethods(beanName, wrappedBean, beanDefinition);
         // 2. 执行BeanPostProcessor After处理
-        wrappedBean = applyBeanPostProcessorsAfterInitialization(bean, beanName);
+        wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
         return wrappedBean;
     }
 

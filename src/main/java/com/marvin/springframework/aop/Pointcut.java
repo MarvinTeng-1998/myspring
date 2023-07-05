@@ -1,7 +1,7 @@
 package com.marvin.springframework.aop;
 
 /**
- * @TODO: 切面 切入点
+ * @TODO: 切面执行的范围
  * @author: dengbin
  * @create: 2023-07-04 17:32
  **/

@@ -6,6 +6,7 @@ import com.marvin.springframework.aop.TargetSource;
 import com.marvin.springframework.aop.aspectj.AspectJExpressionPointcut;
 import com.marvin.springframework.aop.framework.Cglib2AopProxy;
 import com.marvin.springframework.aop.framework.JdkDynamicAopProxy;
+import com.marvin.springframework.context.support.ClassPathXmlApplicationContext;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
@@ -44,5 +45,12 @@ public class AopTest {
         AopUserService proxy_cglib = (AopUserService) new Cglib2AopProxy(advisedSupport).getProxy();
         System.out.println("测试结果" + proxy_cglib.queryUserInfo());
 
+    }
+
+    @Test
+    public void test_AOP(){
+        ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:spring4.xml");
+        AopUserService userService = applicationContext.getBean("AopUserServiceImpl",AopUserService.class);
+        System.out.println("测试结果" + userService.queryUserInfo());
     }
 }
