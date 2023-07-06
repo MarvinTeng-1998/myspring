@@ -29,6 +29,7 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
                 beanDefinitionRegistry.registerBeanDefinition(determineBeanName(beanDefinition), beanDefinition);
             }
         }
+        // beanDefinitionRegistry.registerBeanDefinition("");
     }
 
     /*

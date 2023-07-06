@@ -1,6 +1,7 @@
 package com.marvin.springframework.beans.factory.config;
 
 import com.marvin.springframework.beans.factory.HierarchicalBeanFactory;
+import com.marvin.springframework.util.StringValueResolver;
 
 /**
  * @TODO:这是一个用来设置类的属性的类，同时还可以添加Bean实例化后的处理器。
@@ -21,4 +22,8 @@ public interface ConfigurableBeanFactory extends HierarchicalBeanFactory, Single
      * @return: void
      **/
     void addBeanPostProcessor(BeanPostProcessor beanPostProcessor);
+
+    void addEmbeddedValueResolver(StringValueResolver valueResolver);
+
+    String resolveEmbeddedValue(String value);
 }

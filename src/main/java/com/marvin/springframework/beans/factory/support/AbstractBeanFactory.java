@@ -2,18 +2,14 @@ package com.marvin.springframework.beans.factory.support;
 
 import cn.hutool.core.util.ClassLoaderUtil;
 import com.marvin.springframework.beans.BeansException;
-import com.marvin.springframework.beans.factory.BeanFactory;
 import com.marvin.springframework.beans.factory.FactoryBean;
 import com.marvin.springframework.beans.factory.config.BeanDefinition;
 import com.marvin.springframework.beans.factory.config.BeanPostProcessor;
 import com.marvin.springframework.beans.factory.config.ConfigurableBeanFactory;
-import com.marvin.springframework.beans.factory.config.SingletonBeanRegistry;
-import com.marvin.springframework.beans.factory.support.DefaultSingletonBeanRegistry;
+import com.marvin.springframework.util.StringValueResolver;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @TODO: Bean对象的工厂，可以存放BeanDefinition到Map中以及获取。
@@ -23,10 +19,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport implements ConfigurableBeanFactory {
 
     // 一个放着BeanPostProcessor的容器
-    private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<BeanPostProcessor>();
+    private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
 
     // 一个存放BeanClassLoader的容器
     private ClassLoader beanClassLoader = ClassLoaderUtil.getClassLoader();
+
+    // 一个存放StringResolver的容器
+    private final List<StringValueResolver> embeddedValueResolvers = new ArrayList<>();
 
     /*
      * @Description: TODO 添加BeanPostProcessor到容器中去
@@ -131,5 +130,19 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
     public ClassLoader getBeanClassLoader(){
         return this.beanClassLoader;
+    }
+
+    @Override
+    public void addEmbeddedValueResolver(StringValueResolver valueResolver) {
+        this.embeddedValueResolvers.add(valueResolver);
+    }
+
+    @Override
+    public String resolveEmbeddedValue(String value) {
+        String result = value;
+        for(StringValueResolver resolver : this.embeddedValueResolvers){
+            result = resolver.resolveStringValue(result);
+        }
+        return result;
     }
 }

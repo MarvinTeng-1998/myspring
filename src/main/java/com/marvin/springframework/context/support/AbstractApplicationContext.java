@@ -42,7 +42,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
         // 4. 在实例化Bean之前，执行BeanFactoryPostProcessor
         invokeBeanFactoryPostProcessors(beanFactory);
 
-        // 5. BeanPostProcess 需要提前其他Bean实例化操作之前进行注册操作
+        // 5. BeanPostProcessor 需要提前其他Bean实例化操作之前进行注册操作
         registerBeanPostProcessor(beanFactory);
 
         // 6. 初始化事件发布者
@@ -171,5 +171,10 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
     @Override
     public void publishEvent(ApplicationEvent event){
         applicationEventMulticaster.multicastEvent(event);
+    }
+
+    @Override
+    public <T> T getBean(Class<T> requiredType) throws BeansException {
+        return getBeanFactory().getBean(requiredType);
     }
 }

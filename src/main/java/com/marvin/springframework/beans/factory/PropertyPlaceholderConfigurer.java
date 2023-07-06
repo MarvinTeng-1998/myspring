@@ -7,6 +7,7 @@ import com.marvin.springframework.beans.factory.config.BeanDefinition;
 import com.marvin.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import com.marvin.springframework.core.io.DefaultResourceLoader;
 import com.marvin.springframework.core.io.Resource;
+import com.marvin.springframework.util.StringValueResolver;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -36,6 +37,7 @@ public class PropertyPlaceholderConfigurer implements BeanFactoryPostProcessor {
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
         try {
+            // 加载属性文件
             DefaultResourceLoader resourceLoader = new DefaultResourceLoader();
             Resource resource = resourceLoader.getResource(location);
             Properties properties = new Properties();
@@ -51,23 +53,45 @@ public class PropertyPlaceholderConfigurer implements BeanFactoryPostProcessor {
                     if (!(value instanceof String)) {
                         continue;
                     }
-                    String strVal = (String) value;
-                    StringBuilder buffer = new StringBuilder(strVal);
-                    // BeanDefinition中的属性值确定后，需要使用properties中对应的value进行填充。
-                    int startIdx = strVal.indexOf(DEFAULT_PLACEHOLDER_PREFIX);
-                    int endIdx = strVal.indexOf(DEFAULT_PLACEHOLDER_SUFFIX);
-                    if (startIdx != -1 && endIdx != -1 && startIdx < endIdx) {
-                        String propKey = strVal.substring(startIdx + 2, endIdx);
-                        String propVal = properties.getProperty(propKey);
-                        buffer.replace(startIdx, endIdx + 1, propVal);
-                        propertyValues.addPropertyValue(new PropertyValue(propertyValue.getName(), buffer.toString()));
-                    }
+                    StringBuilder buffer = resolvePlaceholder((String) value, properties);
+                    propertyValues.addPropertyValue(new PropertyValue(propertyValue.getName(), buffer.toString()));
                 }
             }
+
+            StringValueResolver valueResolver = new PlaceholderResolvingStringValueResolver(properties);
+            beanFactory.addEmbeddedValueResolver(valueResolver);
         } catch (IOException e) {
             throw new BeansException("Could not load properties", e);
         }
     }
+
+    private static StringBuilder resolvePlaceholder(String value, Properties properties) {
+        String strVal = value;
+        StringBuilder buffer = new StringBuilder(strVal);
+        // BeanDefinition中的属性值确定后，需要使用properties中对应的value进行填充。
+        int startIdx = strVal.indexOf(DEFAULT_PLACEHOLDER_PREFIX);
+        int endIdx = strVal.indexOf(DEFAULT_PLACEHOLDER_SUFFIX);
+        if (startIdx != -1 && endIdx != -1 && startIdx < endIdx) {
+            String propKey = strVal.substring(startIdx + 2, endIdx);
+            String propVal = properties.getProperty(propKey);
+            buffer.replace(startIdx, endIdx + 1, propVal);
+        }
+        return buffer;
+    }
+
+    private class PlaceholderResolvingStringValueResolver implements StringValueResolver {
+        private final Properties properties;
+
+        public PlaceholderResolvingStringValueResolver(Properties properties) {
+            this.properties = properties;
+        }
+
+        @Override
+        public String resolveStringValue(String strVal) {
+            return PropertyPlaceholderConfigurer.this.resolvePlaceholder(strVal, properties).toString();
+        }
+    }
+
 
     public void setLocation(String location) {
         this.location = location;

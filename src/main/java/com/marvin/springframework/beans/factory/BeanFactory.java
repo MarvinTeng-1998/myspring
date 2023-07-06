@@ -18,6 +18,8 @@ public interface BeanFactory {
      **/
     Object getBean(String beanName);
 
+    <T> T getBean(Class<T> requiredType) throws BeansException;
+
     /*
      * @Description: TODO 根据Bean的名字及对象实例化参数来构造Bean对象。
      * @Author: dengbin

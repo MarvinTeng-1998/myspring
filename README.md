@@ -471,3 +471,20 @@ Pointcut是一种表达式，用于指定哪些地方应用切面。使用Aspect
 
 ![自动扫描.png](img%2F%E8%87%AA%E5%8A%A8%E6%89%AB%E6%8F%8F.png)
 
+## 14 通过注解注入属性信息
+主要是实现@Autowired、@Value注解，完成对属性和对象的注入操作。
+
+### 14.1 设计思路
+主要是使用BeanPostProcessor来完成Bean的BeanDefinition中PropertyValues的注入。
+
+也就是说在实例化也就是applyPropertyValues之前需要完成对PropertyValues的修改。**这里会用到之前设计的PropertyValuePlaceholderConfigurer来修改PropertyValues。**
+
+### 14.2 设计步骤
+首先我们需要设计一个BeanPostProcessor，并且它要被扫描到BeanDefinition中。这个BeanPostProcessor主要是用来读取@Value@Autowire@Qualifier这几个参数标识的属性信息。
+
+其次我们需要在Bean的实例化之后来对这个BeanPostProcessor进行调用处理，因此原本是在属性注入后的BeanPostProcessor处理，这个Processor需要进行提前。因为它会直接修改Bean里面的属性，对属性进行注入。**（本质是上直接对实例化后的对象进行修改，而不是先修改到BeanDefinition中）。**
+
+所以现在的Bean实例化过程变成：先从XML或者自动扫描得到BeanDefinition，然后实例化Bean，然后使用这个BeanPostProcessor来注入Bean的属性，再使用BeanDefinition中的Properties来注入Bean的属性，再调用其它BeanPostProcessor的方法再调用初始化方法等。
+
+![Autowired.png](img%2FAutowired.png)
+

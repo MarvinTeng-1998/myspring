@@ -1,6 +1,8 @@
 package com.marvin.springframework.beans.factory.config;
 
 import com.marvin.springframework.beans.BeansException;
+import com.marvin.springframework.beans.PropertyValue;
+import com.marvin.springframework.beans.PropertyValues;
 
 /**
  * @TODO: 专门用来在Bean对象执行init-method前执行这个方法。
@@ -17,4 +19,6 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
      * @return: java.lang.Object
      **/
     public Object postProcessBeforeInitialization(Class<?> beanClass, String beanName) throws BeansException;
+
+    PropertyValues postProcessPropertyValues(PropertyValues propertyValues, Object bean, String beanName) throws BeansException;
 }
