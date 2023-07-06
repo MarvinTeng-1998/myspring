@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans>
+
+    <bean class="com.marvin.springframework.beans.factory.PropertyPlaceholderConfigurer">
+        <property name="location" value="classpath:token.properties"/>
+    </bean>
+    <bean name="userService" class="com.marvin.aop.AopUserServiceImpl">
+        <property name="token" value="${token}"/>
+    </bean>
+</beans>

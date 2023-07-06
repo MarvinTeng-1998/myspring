@@ -62,6 +62,11 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         beanDefinitionMap.put(beanName,beanDefinition);
     }
 
+    @Override
+    public boolean containsBeanDefinition(String beanName) {
+        return beanDefinitionMap.containsKey(beanName);
+    }
+
     /*
      * @Description: TODO 获取value为传入的class类型的Map
      * @Author: dengbin

@@ -1,5 +1,10 @@
 package com.marvin.aop;
 
+import com.marvin.springframework.context.annotation.Component;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
 import java.util.Random;
 
 /**
@@ -7,7 +12,12 @@ import java.util.Random;
  * @author: dengbin
  * @create: 2023-07-04 18:37
  **/
+@Component("userService")
+@ToString
+@Getter
+@Setter
 public class AopUserServiceImpl implements AopUserService{
+    private String token;
     @Override
     public String queryUserInfo() {
         try {
@@ -27,4 +37,6 @@ public class AopUserServiceImpl implements AopUserService{
         }
         return "注册用户：" + userName + " success！";
     }
+
+
 }

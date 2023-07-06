@@ -53,4 +53,18 @@ public class AopTest {
         AopUserService userService = applicationContext.getBean("AopUserServiceImpl",AopUserService.class);
         System.out.println("测试结果" + userService.queryUserInfo());
     }
+
+    @Test
+    public void test_property(){
+        ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:spring5.xml");
+        AopUserService userService = applicationContext.getBean("userService", AopUserService.class);
+        System.out.println("测试结果" + userService);
+    }
+
+    @Test
+    public void test_scan(){
+        ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:spring-scan.xml");
+        AopUserService userService = applicationContext.getBean("userService",AopUserService.class);
+        System.out.println(userService.queryUserInfo());
+    }
 }

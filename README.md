@@ -450,3 +450,24 @@ Pointcut是一种表达式，用于指定哪些地方应用切面。使用Aspect
 **方法拦截流程**
 
 首先，先对调用的目标方法来进行匹配，看它是否满足方法匹配器。如果满足，则调用方法拦截器的invoke方法，invoke方法里面会调用自身依赖的Advice对这个方法进行增强。然后再执行proceed方法。
+
+## 13 自动扫描Bean对象注册
+通过配置XML以及注解的使用，从而自动注册Bean对象。
+### 13.1 设计思路
+为了简化Bean对象的配置，让整个Bean对象的注册都是自动注册的，那么基本需要的元素包括：
+1. 扫描路径入口
+2. XML解析扫描信息
+3. 给需要扫描的Bean对象做注解标记
+4. 扫描Class对象摘取Bean注册的基本信息
+5. 组装注册信息
+6. 注册成Bean对象
+
+### 13.2 属性填充
+对于属性填充，整体是需要一个叫PropertyValuePlaceholderConfigurer来进行管理的。它会定义占位符的前缀、后缀。以及属性填充文件的地址。（属性填充的文件是一个Properties文件）
+**它是一个BeanFactoryPostProcessor**，在BeanDefinition已经注册完成后，它进行读取配置文件来进行属性填充。核心逻辑主要是拿到原来BeanDefinition中PropertyValue的属性值，然后去读取它的前后缀来匹配，从而替换填充进去。
+
+### 13.3 自动扫描
+这个地方主要是在RefreshBeanFacotry流程中进行的。核心逻辑是在读取XML文件时会读取是否有context:component-scan这个标签，如果有，则读入它的base-package地址，从而调用XMLBeanDefinitionReader#scanPackage方法，进而调用ClassPathBeanDefinitionScanner#doscan的方法，这个主要是通过扫描指定包下含有对应Component注解的类。从而创建这个类的BeanDefinition，最后实例化。
+
+![自动扫描.png](img%2F%E8%87%AA%E5%8A%A8%E6%89%AB%E6%8F%8F.png)
+
