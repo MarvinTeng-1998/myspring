@@ -67,4 +67,11 @@ public class AopTest {
         AopUserService userService = applicationContext.getBean("userService",AopUserService.class);
         System.out.println(userService.queryUserInfo());
     }
+
+    @Test
+    public void test_injection(){
+        ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:spring6.xml");
+        AopUserService userService = applicationContext.getBean("userService", AopUserService.class);
+        System.out.println("测试结果" + userService.queryUserInfo());
+    }
 }

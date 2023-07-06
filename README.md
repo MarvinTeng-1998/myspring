@@ -463,11 +463,11 @@ Pointcut是一种表达式，用于指定哪些地方应用切面。使用Aspect
 6. 注册成Bean对象
 
 ### 13.2 属性填充
-对于属性填充，整体是需要一个叫PropertyValuePlaceholderConfigurer来进行管理的。它会定义占位符的前缀、后缀。以及属性填充文件的地址。（属性填充的文件是一个Properties文件）
+对于属性填充，整体是需要一个叫PropertyValuePlaceholderConfigurer来进行管理的。它会定义占位符的前缀、后缀。以及属性填充文件的地址。（属性填充的文件是一个Properties文件）这里其实用到了一个embeddedValueResolver,在AbstractBeanFactory中有一个容器放着所有的Resolver,里面就有一个关于解析Properties文件中的属性值器。其实核心就是这个解析器读取这个属性的标示值是否匹配解析器的特征，如果是就从文件中读取Value进行解析。
 **它是一个BeanFactoryPostProcessor**，在BeanDefinition已经注册完成后，它进行读取配置文件来进行属性填充。核心逻辑主要是拿到原来BeanDefinition中PropertyValue的属性值，然后去读取它的前后缀来匹配，从而替换填充进去。
 
 ### 13.3 自动扫描
-这个地方主要是在RefreshBeanFacotry流程中进行的。核心逻辑是在读取XML文件时会读取是否有context:component-scan这个标签，如果有，则读入它的base-package地址，从而调用XMLBeanDefinitionReader#scanPackage方法，进而调用ClassPathBeanDefinitionScanner#doscan的方法，这个主要是通过扫描指定包下含有对应Component注解的类。从而创建这个类的BeanDefinition，最后实例化。
+这个地方主要是在RefreshBeanFactory流程中进行的。核心逻辑是在读取XML文件时会读取是否有context:component-scan这个标签，如果有，则读入它的base-package地址，从而调用XMLBeanDefinitionReader#scanPackage方法，进而调用ClassPathBeanDefinitionScanner#doscan的方法，这个主要是通过扫描指定包下含有对应Component注解的类。从而创建这个类的BeanDefinition，最后实例化。
 
 ![自动扫描.png](img%2F%E8%87%AA%E5%8A%A8%E6%89%AB%E6%8F%8F.png)
 
@@ -487,4 +487,14 @@ Pointcut是一种表达式，用于指定哪些地方应用切面。使用Aspect
 所以现在的Bean实例化过程变成：先从XML或者自动扫描得到BeanDefinition，然后实例化Bean，然后使用这个BeanPostProcessor来注入Bean的属性，再使用BeanDefinition中的Properties来注入Bean的属性，再调用其它BeanPostProcessor的方法再调用初始化方法等。
 
 ![Autowired.png](img%2FAutowired.png)
+
+## 15 给代理对象设置属性注入
+之前AOP动态代理的对象不在Bean的生命周期中，这次需要去实现让AOP动态代理的对象也能实现注入属性。
+
+**核心设计思想：**
+之前我们会判断对象是否是代理对象，但是现在不需要这个判断操作了。我们之前将代理对象的生成移到BeanPostProcessor的applyBeanPostProcessorsAfterInitialization操作去了，也就是说这时候我们会先实例化这个被代理对象，然后再到BeanPostProcessor的After操作的时候来处理这个对象的代理。
+
+注：必须是在切面范围内的对象才会被代理！！并不是所有的对象都会被代理。也就是说我们在切面表达式那里就已经限制了被代理对象的范围！！！
+
+
 

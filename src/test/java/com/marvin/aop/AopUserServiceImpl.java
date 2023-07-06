@@ -25,7 +25,7 @@ public class AopUserServiceImpl implements AopUserService{
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return "小傅哥，100001，深圳";
+        return "小傅哥，100001，深圳" + token;
     }
 
     @Override

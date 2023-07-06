@@ -9,6 +9,7 @@ import com.marvin.springframework.beans.factory.BeanFactory;
 import com.marvin.springframework.beans.factory.BeanFactoryAware;
 import com.marvin.springframework.beans.factory.config.ConfigurableBeanFactory;
 import com.marvin.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor;
+import com.marvin.springframework.util.ClassUtils;
 
 import java.lang.reflect.Field;
 
@@ -30,6 +31,7 @@ public class AutowiredAnnotationBeanPostProcessor implements InstantiationAwareB
     public PropertyValues postProcessPropertyValues(PropertyValues propertyValues, Object bean, String beanName) throws BeansException {
         // 1.处理注释@Value
         Class<?> clazz = bean.getClass();
+        clazz = ClassUtils.isCglibProxyClass(clazz) ? clazz.getSuperclass() : clazz;
         Field[] declaredFields = clazz.getDeclaredFields();
 
         for (Field field : declaredFields) {
@@ -72,8 +74,13 @@ public class AutowiredAnnotationBeanPostProcessor implements InstantiationAwareB
     }
 
     @Override
-    public Object postProcessBeforeInitialization(Class<?> beanClass, String beanName) throws BeansException {
+    public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException {
         return null;
+    }
+
+    @Override
+    public boolean postProcessAfterInstantiation(Object bean, String beanName) throws BeansException {
+        return true;
     }
 
 

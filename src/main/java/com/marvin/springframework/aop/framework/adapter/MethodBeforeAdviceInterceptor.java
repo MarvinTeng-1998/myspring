@@ -1,6 +1,7 @@
 package com.marvin.springframework.aop.framework.adapter;
 
 import com.marvin.springframework.aop.MethodBeforeAdvice;
+import com.marvin.springframework.context.annotation.Component;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
@@ -9,6 +10,7 @@ import org.aopalliance.intercept.MethodInvocation;
  * @author: dengbin
  * @create: 2023-07-05 16:32
  **/
+@Component
 public class MethodBeforeAdviceInterceptor implements MethodInterceptor {
     private MethodBeforeAdvice advice;
 

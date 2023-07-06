@@ -9,6 +9,7 @@ import com.marvin.springframework.beans.factory.BeanFactory;
 import com.marvin.springframework.beans.factory.BeanFactoryAware;
 import com.marvin.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor;
 import com.marvin.springframework.beans.factory.support.DefaultListableBeanFactory;
+import com.marvin.springframework.context.annotation.Component;
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInterceptor;
 
@@ -20,12 +21,17 @@ import java.util.Collection;
  * @author: dengbin
  * @create: 2023-07-05 16:13
  **/
+@Component("defaultAdvisorAutoProxyCreator")
 public class DefaultAdvisorAutoProxyCreator implements InstantiationAwareBeanPostProcessor, BeanFactoryAware {
     private DefaultListableBeanFactory beanFactory;
 
     @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
         this.beanFactory = (DefaultListableBeanFactory) beanFactory;
+    }
+
+    public boolean isInfrastructureClass(Class<?> beanClass){
+        return Advice.class.isAssignableFrom(beanClass) || Pointcut.class.isAssignableFrom(beanClass) || Advisor.class.isAssignableFrom(beanClass);
     }
 
     /*
@@ -37,18 +43,35 @@ public class DefaultAdvisorAutoProxyCreator implements InstantiationAwareBeanPos
      * @return: java.lang.Object
      **/
     @Override
-    public Object postProcessBeforeInitialization(Class<?> beanClass, String beanName) throws BeansException {
-        if(isInfrastructureClass(beanClass)) return null;
+    public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException {
+        return null;
+    }
+
+    @Override
+    public boolean postProcessAfterInstantiation(Object bean, String beanName) throws BeansException {
+        return true;
+    }
+
+    @Override
+    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+        return null;
+    }
+
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        if(isInfrastructureClass(bean.getClass())) return null;
         Collection<AspectJExpressionPointcutAdvisor> advisors = beanFactory.getBeansOfType(AspectJExpressionPointcutAdvisor.class).values();
+        // 这里的AspectJExpressionPointcutAdvisor会限制代理对象的范围，因此只有是在切面表达式范围内的对象才能被代理，否则则不代理。
         for(AspectJExpressionPointcutAdvisor advisor : advisors){
             ClassFilter classFilter = advisor.getPointcut().getClassFilter();
-            if(!classFilter.matches(beanClass)) continue;
+            if(!classFilter.matches(bean.getClass())) continue;
             AdvisedSupport advisedSupport = new AdvisedSupport();
 
             TargetSource targetSource = null;
 
             try {
-                targetSource = new TargetSource(beanClass.getDeclaredConstructor().newInstance());
+                // 前面已经实例化好了，所以这里需要直接放入被代理类。
+                targetSource = new TargetSource(bean);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -59,25 +82,11 @@ public class DefaultAdvisorAutoProxyCreator implements InstantiationAwareBeanPos
             advisedSupport.setProxyTargetClass(false);
             return new ProxyFactory(advisedSupport).getProxy();
         }
-        return null;
+        return bean;
     }
 
     @Override
     public PropertyValues postProcessPropertyValues(PropertyValues propertyValues, Object bean, String beanName) throws BeansException {
         return propertyValues;
-    }
-
-    public boolean isInfrastructureClass(Class<?> beanClass){
-        return Advice.class.isAssignableFrom(beanClass) || Pointcut.class.isAssignableFrom(beanClass) || Advisor.class.isAssignableFrom(beanClass);
-    }
-
-    @Override
-    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-        return bean;
-    }
-
-    @Override
-    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-        return bean;
     }
 }

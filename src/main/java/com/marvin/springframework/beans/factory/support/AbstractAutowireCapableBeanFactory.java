@@ -61,13 +61,18 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     protected Object createBean(String beanName, BeanDefinition beanDefinition, Object[] args) {
         Object bean = null;
         try {
-            // 判断是否应该返回代理对象
-            bean = resolveBeforeInstantiation(beanName,beanDefinition);
-            if(null != bean){
-                return bean;
-            }
+            // // 判断是否返回代理 Bean 对象
+            // bean = resolveBeforeInstantiation(beanName, beanDefinition);
+            // if (null != bean) {
+            //     return bean;
+            // }
             // 实例化Bean
             bean = createBeanInstance(beanDefinition, beanName, args);
+            // 实例化后判断
+            boolean continueWithPropertyPopulation = applyBeanPostProcessorsAfterInstantiation(beanName,bean);
+            if(!continueWithPropertyPopulation){
+                return bean;
+            }
             // 在设置Bean属性之前，允许BeanPostProcessor 修改属性值
             applyBeanPostProcessorsBeforeApplyingPropertyValues(beanName, bean, beanDefinition);
             // 这里是主要做了一个属性注入。
@@ -86,6 +91,28 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     }
 
     /*
+     * @Description: TODO 实例化后对于返回false的对象，不再执行后续设置Bean对象属性的操作。
+     * @Author: dengbin
+     * @Date: 6/7/23 17:51
+     * @param beanName:
+     * @param bean:
+     * @return: boolean
+     **/
+    private boolean applyBeanPostProcessorsAfterInstantiation(String beanName, Object bean) {
+        boolean continueWithPropertyPopulation = true;
+        for(BeanPostProcessor beanPostProcessor : getBeanPostProcessors()){
+            if(beanPostProcessor instanceof InstantiationAwareBeanPostProcessor){
+                InstantiationAwareBeanPostProcessor instantiationAwareBeanPostProcessor = (InstantiationAwareBeanPostProcessor) beanPostProcessor;
+                if (!instantiationAwareBeanPostProcessor.postProcessAfterInstantiation(bean,beanName)) {
+                    continueWithPropertyPopulation = false;
+                    break;
+                }
+            }
+        }
+        return continueWithPropertyPopulation;
+    }
+
+    /*
      * @Description: TODO 在设置属性前 先调用BeanPostProcessor来对Autowired和Value的属性赋值。
      * @Author: dengbin
      * @Date: 6/7/23 16:16
@@ -98,11 +125,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         for(BeanPostProcessor beanPostProcessor : getBeanPostProcessors()){
             if(beanPostProcessor instanceof InstantiationAwareBeanPostProcessor){
                 PropertyValues propertyValues = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessPropertyValues(beanDefinition.getPropertyValues(),bean,beanName);
-                if(null != propertyValues){
-                    for(PropertyValue propertyValue : propertyValues.getPropertyValues()){
-                        beanDefinition.getPropertyValues().addPropertyValue(propertyValue);
-                    }
-                }
+                // if(null != propertyValues){
+                //     for(PropertyValue propertyValue : propertyValues.getPropertyValues()){
+                //         beanDefinition.getPropertyValues().addPropertyValue(propertyValue);
+                //     }
+                // }
             }
         }
     }
@@ -134,7 +161,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     protected Object applyBeanPostProcessorsBeforeInstantiation(Class<?> beanClass, String beanName){
         for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
             if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
-                Object result = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessBeforeInitialization(beanClass, beanName);
+                Object result = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessBeforeInstantiation(beanClass, beanName);
                 if (null != result) {
                     return result;
                 }

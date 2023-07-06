@@ -18,7 +18,9 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
      * @param beanName:
      * @return: java.lang.Object
      **/
-    public Object postProcessBeforeInitialization(Class<?> beanClass, String beanName) throws BeansException;
+    public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException;
+
+    boolean postProcessAfterInstantiation(Object bean, String beanName) throws BeansException;
 
     PropertyValues postProcessPropertyValues(PropertyValues propertyValues, Object bean, String beanName) throws BeansException;
 }

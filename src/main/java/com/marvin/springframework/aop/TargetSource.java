@@ -1,5 +1,7 @@
 package com.marvin.springframework.aop;
 
+import com.marvin.springframework.util.ClassUtils;
+
 /**
  * @TODO: 包装了被代理类的相关信息：被代理类、被代理类实现的接口
  * @author: dengbin
@@ -20,7 +22,9 @@ public class TargetSource {
      * @return: java.lang.Class<?>[]
      **/
     public Class<?>[] getTargetClass(){
-        return this.target.getClass().getInterfaces();
+        Class<?> clazz = this.target.getClass();
+        clazz = ClassUtils.isCglibProxyClass(clazz) ? clazz.getSuperclass() : clazz;
+        return clazz.getInterfaces();
     }
 
     /*
