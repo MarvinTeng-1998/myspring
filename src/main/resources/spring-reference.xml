@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans>
+    <bean id="husband" class="com.marvin.reference.Husband">
+        <property name="wife" ref="wife"/>
+    </bean>
+    <bean id="wife" class="com.marvin.reference.Wife">
+        <property name="husband" ref="husband"/>
+        <property name="mother" ref="husbandMother"/>
+    </bean>
+    <bean id="husbandMother" class="com.marvin.reference.HusbandMother"/>
+    <bean class="com.marvin.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"/>
+    <bean id="beforeAdvice" class="com.marvin.reference.SpouseAdvice"/>
+    <bean id="methodInterceptor" class="com.marvin.springframework.aop.framework.adapter.MethodBeforeAdviceInterceptor">
+        <property name="advice" ref="beforeAdvice"/>
+    </bean>
+    <bean id="pointcutAdvisor" class="com.marvin.springframework.aop.aspectj.AspectJExpressionPointcutAdvisor">
+        <property name="expression" value="execution(* com.marvin.reference.Wife.*(..))"/>
+        <property name="advice" ref="methodInterceptor"/>
+    </bean>
+
+
+
+</beans>

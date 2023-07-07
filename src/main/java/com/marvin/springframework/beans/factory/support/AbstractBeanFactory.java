@@ -89,6 +89,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
         }
         BeanDefinition beanDefinition = getBeanDefinition(beanName);
         Object bean = createBean(beanName,beanDefinition,args);
+        // 这里会进行判断这里的Bean是否是一个FactoryBean，如果是的话则去用代理模式实例化FactoryBean中的对象，并且放在CacheObject中。
         return (T) getObjectForBeanInstance(bean,beanName);
     }
 
